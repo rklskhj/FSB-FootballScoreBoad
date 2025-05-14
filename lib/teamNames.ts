@@ -111,7 +111,7 @@ export const teamNamesByLeague: LeagueTeams = {
     "Paris Saint-Germain FC": "파리 생제르맹",
     "AS Monaco FC": "모나코",
     "Olympique de Marseille": "마르세유",
-    "Lille OSC": "릴",
+    "Lille OSC": "LOSC 릴",
     "Olympique Lyonnais": "리옹",
     "Stade Rennais FC 1901": "렌",
     "OGC Nice": "니스",
@@ -124,7 +124,7 @@ export const teamNamesByLeague: LeagueTeams = {
     "Toulouse FC": "툴루즈",
     "Angers SCO": "앙제",
     "Le Havre AC": "르아브르",
-    "AJ Auxerre": "옥세르",
+    "AJ Auxerre": "오세르",
     "RC Strasbourg Alsace": "스트라스부르",
   },
 };
@@ -181,6 +181,7 @@ export function translateTeamName(name: string, leagueId?: number): string {
     "Cádiz CF": "카디스",
     "Granada CF": "그라나다",
     "UD Almería": "알메리아",
+    "RCD Espanyol de Barcelona": "에스파뇰",
 
     // 세리에 A
     "FC Internazionale Milano": "인터 밀란",
@@ -203,6 +204,7 @@ export function translateTeamName(name: string, leagueId?: number): string {
     "Frosinone Calcio": "프로시노네",
     "US Sassuolo Calcio": "사수올로",
     "US Salernitana 1919": "살레르니타나",
+    "Holstein Kiel": "홀슈타인 킬",
 
     // 분데스리가
     "Bayer 04 Leverkusen": "레버쿠젠",
@@ -228,7 +230,7 @@ export function translateTeamName(name: string, leagueId?: number): string {
     "Paris Saint-Germain FC": "파리 생제르맹",
     "AS Monaco FC": "모나코",
     "Stade Brestois 29": "브레스트",
-    "Lille OSC": "릴",
+    "Lille OSC": "LOSC 릴",
     "OGC Nice": "니스",
     "RC Lens": "랑스",
     "Olympique Lyonnais": "리옹",
@@ -243,6 +245,9 @@ export function translateTeamName(name: string, leagueId?: number): string {
     "Le Havre AC": "르아브르",
     "FC Metz": "메스",
     "Clermont Foot 63": "클레르몽",
+    "AS Saint-Étienne": "생테티엔",
+    "AJ Auxerre": "오세르",
+    "Angers SCO": "앙제",
 
     // 챔피언스리그 추가 팀
     "Celtic FC": "셀틱",

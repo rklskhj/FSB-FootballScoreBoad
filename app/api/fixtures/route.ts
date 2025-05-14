@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebaseAdmin";
+import { Timestamp } from "firebase-admin/firestore";
 
 // API 키와 기본 URL 설정
 const FOOTBALL_DATA_API_KEY = process.env.FOOTBALL_DATA_API_KEY;
@@ -13,6 +15,24 @@ const leagueMapping: Record<string, number> = {
   "ligue-1": 2015,
   "champions-league": 2001,
 };
+
+// 경기 일정 데이터 타입 정의
+interface FixtureData {
+  id: number;
+  date: string;
+  status: string;
+  matchday: number;
+  stage: string;
+  homeTeam: string;
+  homeTeamLogo: string;
+  awayTeam: string;
+  awayTeamLogo: string;
+  score: {
+    home: number | null;
+    away: number | null;
+  };
+  venue: string;
+}
 
 /**
  * football-data.org API에서 데이터 가져오기
@@ -46,6 +66,94 @@ async function fetchFromFootballData(endpoint: string) {
   } catch (error) {
     console.error("Error fetching from football-data.org:", error);
     throw error;
+  }
+}
+
+/**
+ * Firebase에서 경기 일정 데이터 가져오기
+ */
+async function getFixturesFromFirebase(leagueId: string) {
+  try {
+    // Firebase Admin이 초기화되지 않았으면 null 반환
+    if (!adminDb) {
+      console.log(
+        "Firebase Admin SDK not initialized, skipping Firestore check"
+      );
+      return null;
+    }
+
+    const docRef = adminDb.collection("fixtures").doc(leagueId);
+    const docSnap = await docRef.get();
+
+    if (docSnap.exists) {
+      const data = docSnap.data();
+
+      // data가 존재하는지 확인
+      if (!data) {
+        console.log(`No fixtures data found for league ${leagueId}`);
+        return null;
+      }
+
+      // 마지막 업데이트가 24시간 이상 지났는지 확인
+      const lastUpdated = data.lastUpdated?.toDate();
+      if (lastUpdated) {
+        const now = new Date();
+        const hoursSinceUpdate =
+          (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60);
+
+        // 24시간 이상 지났으면 새로운 데이터 가져오기
+        if (hoursSinceUpdate >= 24) {
+          console.log(
+            `Fixtures data is more than 24 hours old, fetching new data for league ${leagueId}`
+          );
+          return null;
+        }
+
+        console.log(
+          `Using cached fixtures data for league ${leagueId} (last updated: ${lastUpdated.toISOString()})`
+        );
+        return {
+          fixtures: data.fixtures,
+          groupedFixtures: data.groupedFixtures,
+        };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error getting fixtures data from Firebase:", error);
+    return null;
+  }
+}
+
+/**
+ * Firebase에 경기 일정 데이터 저장
+ */
+async function storeFixturesToFirebase(
+  leagueId: string,
+  fixturesData: {
+    fixtures: FixtureData[];
+    groupedFixtures: Record<string, FixtureData[]>;
+  }
+) {
+  try {
+    if (!adminDb) {
+      console.log("Firebase Admin SDK not initialized, skipping data storage");
+      return false;
+    }
+
+    const docRef = adminDb.collection("fixtures").doc(leagueId);
+    await docRef.set({
+      fixtures: fixturesData.fixtures,
+      groupedFixtures: fixturesData.groupedFixtures,
+      lastUpdated: Timestamp.now(),
+    });
+
+    console.log(`Fixtures data stored in Firebase for league ${leagueId}`);
+    return true;
+  } catch (error) {
+    console.error("Error storing fixtures data in Firebase:", error);
+    return false;
   }
 }
 
@@ -215,10 +323,10 @@ const mockFixturesData = {
 };
 
 // 날짜를 월 단위로 그룹화하는 함수
-function groupFixturesByMonth(fixtures: any[]) {
-  const grouped: Record<string, any[]> = {};
+function groupFixturesByMonth(fixtures: FixtureData[]) {
+  const grouped: Record<string, FixtureData[]> = {};
 
-  fixtures.forEach((fixture) => {
+  fixtures.forEach((fixture: FixtureData) => {
     const date = new Date(fixture.date);
     const monthYear = `${date.getFullYear()}-${String(
       date.getMonth() + 1
@@ -247,6 +355,37 @@ export async function GET(request: Request) {
   }
 
   try {
+    // 1. Firebase에서 캐시된 데이터 확인
+    const cachedData = await getFixturesFromFirebase(league);
+    if (cachedData) {
+      // 월별 필터링
+      let filteredFixtures = cachedData.fixtures;
+      if (month) {
+        filteredFixtures = cachedData.fixtures.filter(
+          (fixture: FixtureData) => {
+            const fixtureDate = new Date(fixture.date);
+            const fixtureMonth = `${fixtureDate.getFullYear()}-${String(
+              fixtureDate.getMonth() + 1
+            ).padStart(2, "0")}`;
+            return fixtureMonth === month;
+          }
+        );
+      }
+
+      // 월별 그룹화 (필요한 경우)
+      let groupedFixtures = cachedData.groupedFixtures;
+      if (month) {
+        groupedFixtures = { [month]: filteredFixtures };
+      }
+
+      return NextResponse.json({
+        fixtures: filteredFixtures,
+        groupedFixtures: groupedFixtures,
+        isCache: true,
+      });
+    }
+
+    // 2. 캐시된 데이터가 없으면 API에서 가져오기
     // football-data.org API 키가 설정되어 있는지 확인
     if (!FOOTBALL_DATA_API_KEY) {
       console.log("API 키가 없어 목업 데이터를 반환합니다.");
@@ -256,7 +395,7 @@ export async function GET(request: Request) {
       // 월별 필터링
       let filteredFixtures = fixtures;
       if (month) {
-        filteredFixtures = fixtures.filter((fixture) => {
+        filteredFixtures = fixtures.filter((fixture: FixtureData) => {
           const fixtureDate = new Date(fixture.date);
           const fixtureMonth = `${fixtureDate.getFullYear()}-${String(
             fixtureDate.getMonth() + 1
@@ -310,7 +449,7 @@ export async function GET(request: Request) {
     // 월별 필터링
     let filteredFixtures = formattedFixtures;
     if (month) {
-      filteredFixtures = formattedFixtures.filter((fixture: any) => {
+      filteredFixtures = formattedFixtures.filter((fixture: FixtureData) => {
         const fixtureDate = new Date(fixture.date);
         const fixtureMonth = `${fixtureDate.getFullYear()}-${String(
           fixtureDate.getMonth() + 1
@@ -321,12 +460,22 @@ export async function GET(request: Request) {
 
     // 날짜순으로 정렬 (최신 경기가 먼저 오도록)
     filteredFixtures.sort(
-      (a: any, b: any) =>
+      (a: FixtureData, b: FixtureData) =>
         new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 
     // 월별 그룹화
     const groupedFixtures = groupFixturesByMonth(filteredFixtures);
+
+    // 3. 가져온 데이터를 Firebase에 저장 (비동기적으로)
+    const fixturesData = {
+      fixtures: formattedFixtures,
+      groupedFixtures: groupFixturesByMonth(formattedFixtures),
+    };
+
+    storeFixturesToFirebase(league, fixturesData)
+      .then(() => console.log(`Fixtures data for ${league} stored in Firebase`))
+      .catch((err) => console.error(`Error storing fixtures data: ${err}`));
 
     return NextResponse.json({
       fixtures: filteredFixtures,

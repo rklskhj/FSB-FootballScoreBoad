@@ -46,6 +46,7 @@ const playerNameMap: Map<string, string> = new Map([
   ["Iago Aspas", "이아고 아스파스"],
   ["Antoine Griezmann", "안토니 그리즈만"],
   ["Lamine Yamal", "라민 야말"],
+  ["Cristhian Stuani", "크리스티안 스투아니"],
 
   // Serie A
   ["Mateo Retegui", "마테오 레테기"],

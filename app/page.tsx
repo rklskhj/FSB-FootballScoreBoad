@@ -10,6 +10,8 @@ import { FixturesTable } from "@/components/fixtures-table";
 import { LeagueSkeleton } from "@/components/league-skeleton";
 import { FixturesSkeleton } from "@/components/fixtures-skeleton";
 import { ChampionsLeagueStandings } from "@/components/champions-league-standings";
+import { usePlayersData } from "@/lib/playerDataService";
+import { useFixturesData } from "@/lib/fixtureDataService";
 
 // 리그 데이터
 const leagues = [
@@ -78,52 +80,36 @@ const leagues = [
 export default function Home() {
   const [activeLeague, setActiveLeague] = useState<string>("premier-league");
   const [activeTab, setActiveTab] = useState<string>("standings");
-  const [players, setPlayers] = useState<any[]>([]);
-  const [fixtures, setFixtures] = useState<{
-    fixtures: any[];
-    groupedFixtures: Record<string, any[]>;
-  }>({ fixtures: [], groupedFixtures: {} });
-  const [loading, setLoading] = useState<boolean>(true);
   const [isUsingCache, setIsUsingCache] = useState<boolean>(false);
+
+  // React Query 훅 사용
+  const { data: playersData, isLoading: isPlayersLoading } =
+    usePlayersData(activeLeague);
+
+  const { data: fixturesData, isLoading: isFixturesLoading } =
+    useFixturesData(activeLeague);
+
+  // 캐시 상태 업데이트
+  useEffect(() => {
+    if (playersData?.isUsingCache || fixturesData?.isUsingCache) {
+      setIsUsingCache(true);
+    } else {
+      setIsUsingCache(false);
+    }
+  }, [playersData, fixturesData]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  useEffect(() => {
-    // Reset cache status when changing leagues
-    setIsUsingCache(false);
-
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // 플레이어 순위와 일정 데이터 가져오기
-        const playersRes = await fetch(`/api/players?league=${activeLeague}`);
-        const playersData = await playersRes.json();
-
-        const fixturesRes = await fetch(`/api/fixtures?league=${activeLeague}`);
-        const fixturesData = await fixturesRes.json();
-
-        setPlayers(playersData);
-        setFixtures(fixturesData);
-      } catch (error) {
-        console.error("데이터 로딩 중 오류 발생:", error);
-      } finally {
-        // 로딩 시간을 시뮬레이션하기 위한 타임아웃
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
-      }
-    };
-
-    fetchData();
-  }, [activeLeague]);
 
   const homeRouter = () => {
     window.scrollTo(0, 0);
     setActiveLeague("premier-league");
     setActiveTab("standings");
   };
+
+  // 로딩 상태 계산
+  const isLoading = isPlayersLoading || isFixturesLoading;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -203,7 +189,7 @@ export default function Home() {
               </TabsList>
 
               <TabsContent value="standings">
-                {loading ? (
+                {isLoading ? (
                   <LeagueSkeleton />
                 ) : activeLeague === "champions-league" ? (
                   <ChampionsLeagueStandings
@@ -219,18 +205,20 @@ export default function Home() {
               </TabsContent>
 
               <TabsContent value="players">
-                {loading ? (
+                {isPlayersLoading ? (
                   <LeagueSkeleton />
                 ) : (
-                  <TopPlayersTable data={players} />
+                  <TopPlayersTable data={playersData?.players || []} />
                 )}
               </TabsContent>
 
               <TabsContent value="fixtures">
-                {loading ? (
+                {isFixturesLoading ? (
                   <FixturesSkeleton />
                 ) : (
-                  <FixturesTable data={fixtures} />
+                  <FixturesTable
+                    data={fixturesData || { fixtures: [], groupedFixtures: {} }}
+                  />
                 )}
               </TabsContent>
             </Tabs>
