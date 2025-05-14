@@ -159,6 +159,9 @@ export function translateTeamName(name: string, leagueId?: number): string {
     "Luton Town FC": "루턴 타운",
     "Burnley FC": "번리",
     "Sheffield United FC": "셰필드 유나이티드",
+    "Ipswich Town FC": "입스위치 타운",
+    "Leicester City FC": "레스터 시티",
+    "Southampton FC": "사우샘프턴",
 
     // 라리가
     "Real Madrid CF": "레알 마드리드",
@@ -182,6 +185,8 @@ export function translateTeamName(name: string, leagueId?: number): string {
     "Granada CF": "그라나다",
     "UD Almería": "알메리아",
     "RCD Espanyol de Barcelona": "에스파뇰",
+    "CD Leganés": "레가네스",
+    "Real Valladolid CF": "바야돌리드",
 
     // 세리에 A
     "FC Internazionale Milano": "인터 밀란",
@@ -205,6 +210,9 @@ export function translateTeamName(name: string, leagueId?: number): string {
     "US Sassuolo Calcio": "사수올로",
     "US Salernitana 1919": "살레르니타나",
     "Holstein Kiel": "홀슈타인 킬",
+    "Parma Calcio 1913": "파르마",
+    "Como 1907": "코모",
+    "Venezia FC": "베네치아",
 
     // 분데스리가
     "Bayer 04 Leverkusen": "레버쿠젠",
@@ -225,6 +233,7 @@ export function translateTeamName(name: string, leagueId?: number): string {
     "VfL Bochum 1848": "보훔",
     "1. FC Köln": "쾰른",
     "SV Darmstadt 98": "다름슈타트",
+    "FC St. Pauli 1910": "장크트 파울리",
 
     // 리그 1
     "Paris Saint-Germain FC": "파리 생제르맹",
@@ -248,6 +257,7 @@ export function translateTeamName(name: string, leagueId?: number): string {
     "AS Saint-Étienne": "생테티엔",
     "AJ Auxerre": "오세르",
     "Angers SCO": "앙제",
+    "Racing Club de Lens": "랑스",
 
     // 챔피언스리그 추가 팀
     "Celtic FC": "셀틱",

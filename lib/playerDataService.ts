@@ -112,9 +112,15 @@ export function usePlayersData(leagueId: string) {
 
       const responseData = await response.json();
 
+      // API 응답 구조 처리
+      const isCache = responseData.isCache || false;
+      const players = Array.isArray(responseData)
+        ? responseData
+        : responseData.players || [];
+
       return {
-        players: responseData,
-        isUsingCache: responseData.isCache || false,
+        players,
+        isUsingCache: isCache,
       };
     },
     staleTime: 1000 * 60 * 5, // 5분

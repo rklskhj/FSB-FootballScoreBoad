@@ -16,10 +16,10 @@ import { translatePlayerName } from "@/lib/playerNames";
 type SortDirection = "asc" | "desc";
 
 interface TopPlayersTableProps {
-  data: any[];
+  data: any[] | undefined;
 }
 
-export function TopPlayersTable({ data }: TopPlayersTableProps) {
+export function TopPlayersTable({ data = [] }: TopPlayersTableProps) {
   // 정렬 상태
   const [sortField, setSortField] = useState<string>("goals");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -34,6 +34,15 @@ export function TopPlayersTable({ data }: TopPlayersTableProps) {
     }
   };
 
+  // 데이터가 없는 경우 처리
+  if (!data || data.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p>개인 순위 데이터를 불러오는 중 오류가 발생했습니다.</p>
+      </div>
+    );
+  }
+
   // 정렬된 데이터
   const sortedData = [...data].sort((a, b) => {
     if (sortDirection === "asc") {
@@ -42,15 +51,6 @@ export function TopPlayersTable({ data }: TopPlayersTableProps) {
       return a[sortField] < b[sortField] ? 1 : -1;
     }
   });
-
-  // 데이터가 없는 경우 처리
-  if (data.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p>개인 순위 데이터를 불러오는 중 오류가 발생했습니다.</p>
-      </div>
-    );
-  }
 
   return (
     <div className="rounded-md border overflow-hidden">
