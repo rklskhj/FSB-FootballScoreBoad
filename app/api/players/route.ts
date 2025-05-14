@@ -374,7 +374,7 @@ export async function GET(request: Request) {
     const cachedData = await getPlayersFromFirebase(league);
     if (cachedData) {
       return NextResponse.json({
-        ...cachedData,
+        players: cachedData,
         isCache: true,
       });
     }
@@ -385,7 +385,10 @@ export async function GET(request: Request) {
       console.log("API 키가 없어 목업 데이터를 반환합니다.");
       const mockData =
         mockPlayersData[league as keyof typeof mockPlayersData] || [];
-      return NextResponse.json(mockData);
+      return NextResponse.json({
+        players: mockData,
+        isCache: false,
+      });
     }
 
     // API에서 득점자 데이터 가져오기
@@ -414,12 +417,18 @@ export async function GET(request: Request) {
       .then(() => console.log(`Players data for ${league} stored in Firebase`))
       .catch((err) => console.error(`Error storing players data: ${err}`));
 
-    return NextResponse.json(formattedData);
+    return NextResponse.json({
+      players: formattedData,
+      isCache: false,
+    });
   } catch (error) {
     console.error("플레이어 데이터 가져오기 실패:", error);
     // 에러 발생 시 목업 데이터 반환
-    return NextResponse.json(
-      mockPlayersData[league as keyof typeof mockPlayersData] || []
-    );
+    const mockData =
+      mockPlayersData[league as keyof typeof mockPlayersData] || [];
+    return NextResponse.json({
+      players: mockData,
+      isCache: false,
+    });
   }
 }
