@@ -11,8 +11,8 @@ import ScrollToTopButton from "@/components/scroll-to-top-button";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "유럽 5대 리그 - 축구 데이터",
-  description: "유럽 5대 리그의 축구 데이터를 제공하는 웹앱입니다.",
+  title: "해외축구 - Football Score Board",
+  description: "해외 축구 경기 결과를 제공하는 웹앱입니다.",
   generator: "v0.dev",
 };
 
